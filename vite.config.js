@@ -14,8 +14,16 @@ export default defineConfig({
     port: 3000,
     open: true
   },
-  base:'./',
-  build:{
-    outDir:'dist'
+  base: './',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'echarts': ['echarts']
+        }
+      }
+    }
   }
 })
