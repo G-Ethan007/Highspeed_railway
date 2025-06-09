@@ -1153,27 +1153,12 @@ export default {
     
     resetView() {
       this.selectedCity = '';
-      this.resetMap();
-      this.cityStats = {
-        hours2: 0,
-        hours4: 0,
-        hours6: 0,
-        total: 0
-      };
-      this.citiesNames = {
-        '2小时': [],
-        '4小时': [],
-        '6小时': []
-      };
-      
-      // 重置地图视图到初始状态
+      this.cityStats = { hours2: 0, hours4: 0, hours6: 0, total: 0 };
+      this.citiesNames = { '2小时': [], '4小时': [], '6小时': [] };
+
       if (this.chart && this.mapLoaded) {
-        this.chart.setOption({
-          geo: {
-            zoom: 1.2,
-            center: [104.5, 36]
-          }
-        });
+        this.chart.clear();
+        this.initChart();
       }
     }
   }
