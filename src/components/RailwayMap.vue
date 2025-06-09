@@ -1157,8 +1157,10 @@ export default {
       this.citiesNames = { '2小时': [], '4小时': [], '6小时': [] };
 
       if (this.chart && this.mapLoaded) {
-        this.chart.clear();
-        this.initChart();
+        // 切换地图模式为高铁城市圈
+        this.currentMapMode = 'railway';
+        // 显示高铁地图
+        this.showRailwayMap();
       }
     }
   }
