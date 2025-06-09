@@ -100,6 +100,7 @@ import * as echarts from 'echarts'
 import coordData from 'assets/coord-data.json'
 import cityGeoCoords from 'assets/cityGeoCoords.json'
 import chinaMapData from 'assets/China.json'  // 修改为正确的大小写
+import sichuanMapData from 'assets/510000.json'  // 添加四川省地图数据导入
 import { tooltipEmits } from 'element-plus'
 
 export default {
@@ -359,38 +360,22 @@ export default {
         
         console.log('Loading province map data for code:', province.value)
         
-        const urls = [
-          `https://geo.datav.aliyun.com/areas_v3/bound/${province.code}_full.json`,
-          `https://geo.datav.aliyun.com/areas_v2/bound/${province.code}_full.json`
-        ]
-        
         let provinceMapData = null
         let loadSuccess = false
-        
-        for (let url of urls) {
+
+        // 特殊处理四川省
+        if (province.code === '510000') {
           try {
-            console.log('Trying URL:', url)
-            const response = await fetch(url, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json',
-              }
-            })
-            
-            if (response.ok) {
-              provinceMapData = await response.json()
-              loadSuccess = true
-              console.log('Province map data loaded successfully from:', url)
-              break
-            }
+            provinceMapData = sichuanMapData
+            loadSuccess = true
+            console.log('Sichuan province map data loaded successfully from local file')
           } catch (err) {
-            console.warn('Failed to load from:', url, err.message)
-            continue
+            console.error('Failed to load Sichuan map data:', err)
           }
         }
         
         if (!loadSuccess || !provinceMapData) {
-          console.error('All URLs failed, using fallback method')
+          console.error('Failed to load map data, using fallback method')
           this.showSimplifiedProvinceView(province)
           return
         }
@@ -422,11 +407,33 @@ export default {
     
     // 显示省份地图
     showProvinceMap(province) {
-      const cities = this.getProvinceCities(province.name)
-
       // 重置点击选择和连线数据
       this.selectedCity1 = null;
       this.currentLineData = [];
+
+      // 获取四川省的城市数据
+      const cities = [];
+      if (province.name === '四川省') {
+        // 从 cityGeoCoords.json 中获取四川省的城市数据
+        const sichuanCities = [
+          '成都市', '绵阳市', '德阳市', '自贡市', '攀枝花市', '泸州市', 
+          '达州市', '南充市', '遂宁市', '内江市', '乐山市', '资阳市', 
+          '宜宾市', '广元市', '眉山市', '雅安市', '广安市', '巴中市', 
+          '阿坝藏族羌族自治州', '甘孜藏族自治州', '凉山彝族自治州'
+        ];
+        
+        sichuanCities.forEach(cityName => {
+          if (cityGeoCoords[cityName]) {
+            cities.push({
+              name: cityName,
+              value: cityGeoCoords[cityName]
+            });
+          }
+        });
+      } else {
+        // 其他省份使用原有的获取方式
+        cities.push(...this.getProvinceCities(province.name));
+      }
 
       const option = {
         backgroundColor: '#ffffff',
@@ -478,40 +485,37 @@ export default {
               fontSize: 10,
               formatter: '{b}'
             },
-             // 添加 tooltip 来显示城市信息
             tooltip: {
               formatter: function (params) {
-                  return params.name; // 点击散点时显示城市名称
+                return params.name;
               }
             }
           },
-          // 新增：用于显示连线的 series
           {
             name: '高铁路线',
             type: 'lines',
             coordinateSystem: 'geo',
-            zlevel: 2, // 确保线在散点上方
+            zlevel: 2,
             effect: {
               show: true,
-              period: 6, // 箭头流动速度
-              trailLength: 0.7, // 尾巴长度
+              period: 6,
+              trailLength: 0.7,
               color: '#fff',
-              symbolSize: 3 // 箭头大小
+              symbolSize: 3
             },
             lineStyle: {
               normal: {
-                color: '#c23531', // 线的颜色
+                color: '#c23531',
                 width: 2,
                 opacity: 0.6,
-                curveness: 0.2 // 线的弯曲度
+                curveness: 0.2
               }
             },
-            data: this.currentLineData, // 绑定到 currentLineData
-
-            label: { // 保持默认隐藏，或只在强调时显示
-              show: false // 默认不显示，如果需要悬停显示可以设为 true 并调整 formatter
+            data: this.currentLineData,
+            label: {
+              show: false
             },
-            tooltip: {
+           tooltip: {
             // 配置 tooltip 显示
             show: true,
             formatter: function (params) {
@@ -538,28 +542,6 @@ export default {
     },
     
 
-    // 新增：获取省份内的城市数据
-    getProvinceCities(provinceName) {
-      const cityNames = this.provinceCityMap[provinceName] || [];
-      const cities = [];
-
-      console.log('该省份的城市列表:', cityNames);
-
-      cityNames.forEach(cityName => {
-        // 从 cityGeoCoords 中查找城市坐标
-        if (cityGeoCoords[cityName]) { 
-          cities.push({
-            name: cityName,
-            value: cityGeoCoords[cityName] 
-          });
-        } else {
-          console.warn(`警告：城市 '${cityName}' 的地理坐标数据未找到在 cityGeoCoords 中。`);
-        }
-      });
-
-      console.log('最终生成的城市点数据:', cities);
-      return cities;
-    },
     
     // 新增：添加返回按钮
     addBackButton() {
