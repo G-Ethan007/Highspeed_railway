@@ -695,10 +695,12 @@ export default {
       if (!this.mapLoaded) return
       
       if (this.currentMapMode === 'railway') {
-        this.connectionDetails = null; // 清除显示的信息
-        this.showRailwayMap()
+        this.connectionDetails = null;
+        this.showRailwayMap();
       } else if (this.currentMapMode === 'heat') {
-        this.showHeatMap()
+        this.isZooming = false;  // 确保切换模式时重置缩放状态
+        this.currentView = 'china';  // 确保视图状态正确
+        this.showHeatMap();
       }
     },
     
@@ -1137,6 +1139,9 @@ export default {
       this.selectedCity = '';
       this.cityStats = { hours2: 0, hours4: 0, hours6: 0, total: 0 };
       this.citiesNames = { '2小时': [], '4小时': [], '6小时': [] };
+      this.isZooming = false;  // 重置缩放状态
+      this.currentView = 'china';  // 重置视图状态
+      this.selectedProvince = '';  // 重置选中的省份
 
       if (this.chart && this.mapLoaded) {
         // 切换地图模式为高铁城市圈
